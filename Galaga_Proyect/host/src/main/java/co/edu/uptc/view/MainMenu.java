@@ -1,8 +1,22 @@
 package co.edu.uptc.view;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.io.InputStream;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 public class MainMenu extends JFrame {
 
@@ -63,6 +77,10 @@ public class MainMenu extends JFrame {
         playButton = createStyledButton("Jugar");
         playButton.setBounds(190, 220, 120, 40);
         backgroundPanel.add(playButton);
+        playButton.addActionListener(e -> {
+            dispose(); 
+            new GalagaMenuView(); 
+        });
 
         infoButton = createStyledButton("Información");
         infoButton.setBounds(190, 280, 120, 40);
