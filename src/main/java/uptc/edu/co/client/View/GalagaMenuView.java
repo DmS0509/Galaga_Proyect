@@ -1,11 +1,11 @@
 package uptc.edu.co.client.View;
 
+import uptc.edu.co.client.controller.AudioController;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.KeyEvent;
-
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -25,6 +25,9 @@ public class GalagaMenuView extends JFrame {
         setVisible(true);
     }
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new GalagaMenuView().setVisible(true));
+    }
 }
 
 class MenuPanel extends JPanel implements java.awt.event.KeyListener {
@@ -32,14 +35,20 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
     private final Font pixelFont = new Font("Monospaced", Font.BOLD, 20);
     private int selectedOption = 0;
     private Image galagaLogo;
+    private AudioController audioManager; // Instancia de AudioManager
 
     public MenuPanel() {
         try {
             galagaLogo = new ImageIcon(getClass().getResource("/Images/galagaLogo.png")).getImage();
-
         } catch (Exception e) {
             galagaLogo = null;
         }
+
+        audioManager = new AudioController();
+        audioManager.loadSound("theme", "/music/theme.wav");
+        audioManager.loopSound("theme"); // Comienza a reproducir la música en bucle
+        setFocusable(true);
+        requestFocusInWindow();
     }
 
     @Override
@@ -53,20 +62,16 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
         if (galagaLogo != null) {
             int logoWidth = galagaLogo.getWidth(this);
             int logoHeight = galagaLogo.getHeight(this);
-
             int scaledWidth = 240; // Ancho deseado
             int scaledHeight = (logoHeight * scaledWidth) / logoWidth;
-
             int xCenter = (getWidth() - scaledWidth) / 2;
-            int yPosition = 35; // Posición vertical fija 
-
+            int yPosition = 35; // Posición vertical fija
             g.drawImage(galagaLogo, xCenter, yPosition, scaledWidth, scaledHeight, this);
         }
 
         g.drawString((selectedOption == 0 ? "▶ " : "  ") + "1 PLAYER", 170, 180);
         g.drawString((selectedOption == 1 ? "▶ " : "  ") + "2 PLAYERS", 170, 210);
         g.drawString((selectedOption == 2 ? "▶ " : "  ") + "VOLVER", 170, 240); // Nueva opción
-
     }
 
     @Override
@@ -81,15 +86,19 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
             case KeyEvent.VK_ENTER:
                 if (selectedOption == 0) {
                     // Abrir GamePauseMenu al seleccionar "1 PLAYER"
+                    audioManager.stopSound("theme"); // Detiene la música al cambiar de pantalla
                     new GamePauseMenu();
                 } else if (selectedOption == 1) {
                     // Abrir GamePauseMenu al seleccionar "2 PLAYERS"
+                    audioManager.stopSound("theme"); // Detiene la música al cambiar de pantalla
                     new GamePauseMenu();
                 } else if (selectedOption == 2) {
                     // Volver al menú principal
+                    audioManager.stopSound("theme"); // Detiene la música al cambiar de pantalla
                     SwingUtilities.getWindowAncestor(this).dispose(); // Cierra la ventana actual
                     new MainMenu(); // Abre la ventana principal
-                }   break;
+                }
+                break;
             default:
                 break;
         }
@@ -102,9 +111,5 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new GalagaMenuView().setVisible(true));
     }
 }

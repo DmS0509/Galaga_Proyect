@@ -45,16 +45,12 @@ public class EnemyPanel extends JFrame {
 
     public void initComponents() {
         getContentPane().setLayout(null); 
-
-        // Crear y agregar el fondo
         JLabel backgroundLabel = new JLabel(
             resizeIcon(new ImageIcon(getClass().getResource("/Images/fondo.jpg")), getWidth(), getHeight())
         );
         
         backgroundLabel.setBounds(0, 0, getWidth(), getHeight());
         getContentPane().add(backgroundLabel);
-
-        // Crear el botón de retroceso
         backButton = new JButton(new ImageIcon(LEFT_BUTTON_IMAGE));
         backButton.setBounds(10, 10, 50, 50);
         backButton.setContentAreaFilled(false);

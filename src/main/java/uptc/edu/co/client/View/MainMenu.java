@@ -1,5 +1,6 @@
 package uptc.edu.co.client.View;
 
+import uptc.edu.co.client.controller.AudioController;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
@@ -7,7 +8,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
-
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -21,6 +23,7 @@ public class MainMenu extends JFrame {
     private JButton playButton;
     private JButton infoButton;
     private JLabel logoLabel;
+    private AudioController audioManager; // Instancia de AudioManager
 
     public MainMenu() {
         setTitle("Galaga");
@@ -28,6 +31,9 @@ public class MainMenu extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        audioManager = new AudioController();
+        audioManager.loadSound("theme", "/music/theme.wav"); 
+        audioManager.loopSound("theme");
 
         initComponents();
         setVisible(true);
@@ -58,16 +64,24 @@ public class MainMenu extends JFrame {
         playButton = createStyledButton("Jugar");
         playButton.setBounds(190, 220, 120, 40);
         backgroundPanel.add(playButton);
-        playButton.addActionListener(e -> {
-            dispose(); 
-            new GalagaMenuView();
+        playButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                audioManager.stopSound("theme"); 
+                dispose();
+                new GalagaMenuView();
+            }
         });
 
         infoButton = createStyledButton("Información");
         infoButton.setBounds(190, 280, 120, 40);
         backgroundPanel.add(infoButton);
-        infoButton.addActionListener(e -> {
-            new InfoPanel();
+        infoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                audioManager.stopSound("theme");
+                new InfoPanel();
+            }
         });
 
         addComponentListener(new java.awt.event.ComponentAdapter() {

@@ -17,7 +17,6 @@ public class GameEngine {
     private Map<String, ClientHadler> clients;
     private final int updatesPerSecond = 30;
     private final long updateIntervalNanos = 1_000_000_000L / updatesPerSecond;
-    private boolean running = true;
     private ScheduledExecutorService scheduler;
 
     public GameEngine() {
@@ -32,7 +31,6 @@ public class GameEngine {
     }
 
     public void stop() {
-        running = false;
         scheduler.shutdown();
         System.out.println("Game Engine detenido.");
     }

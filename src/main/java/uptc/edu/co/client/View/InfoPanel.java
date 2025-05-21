@@ -1,5 +1,6 @@
 package uptc.edu.co.client.View;
 
+import uptc.edu.co.client.controller.AudioController;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
@@ -11,7 +12,6 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.net.URL;
 import java.util.Random;
-
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -44,7 +44,14 @@ public class InfoPanel extends JFrame {
     private static final String LEFT_BUTTON_IMAGE = "/Images/boton-izquierda.png";
     private static final String RIGHT_BUTTON_IMAGE = "/Images/boton-derecha.png";
 
+    private AudioController audioManager; // Instancia de AudioManager
+
     public InfoPanel() {
+        // Inicializa AudioManager y carga la música
+        audioManager = new AudioController();
+        audioManager.loadSound("theme", "/music/theme.wav"); // Carga el tema
+        audioManager.loopSound("theme"); // Comienza la reproducción en bucle
+
         initializeFrame();
         initComponents();
         setVisible(true);
@@ -75,8 +82,14 @@ public class InfoPanel extends JFrame {
         addRulesContentToPanel(rulesPanel);
         addStars(mainPanel);
 
-        backButton.addActionListener(e -> dispose());
-        nextButton.addActionListener(e -> navigateTo(new ControlsPanel()));
+        backButton.addActionListener(e -> {
+            audioManager.stopSound("theme"); // Detiene la música al cerrar
+            dispose();
+        });
+        nextButton.addActionListener(e -> {
+            audioManager.stopSound("theme"); // Detiene la música al navegar
+            navigateTo(new ControlsPanel());
+        });
     }
 
     private JPanel createMainPanel() {
@@ -91,10 +104,10 @@ public class InfoPanel extends JFrame {
             System.err.println("No se pudo cargar la imagen: " + imagePath);
             return new JButton("?");
         }
-    
+
         ImageIcon icon = new ImageIcon(imageUrl);
         Image scaledImage = scaleImage(icon.getImage(), 48, 48);
-    
+
         JButton button = new JButton(new ImageIcon(scaledImage));
         button.setBounds(x, y, BUTTON_SIZE, BUTTON_SIZE);
         button.setContentAreaFilled(false);
@@ -104,7 +117,6 @@ public class InfoPanel extends JFrame {
         button.setVisible(true);
         return button;
     }
-    
 
     private Image scaleImage(Image image, int width, int height) {
         try {
@@ -154,13 +166,10 @@ public class InfoPanel extends JFrame {
     }
 
     private void addRulesContentToPanel(JPanel panel) {
-        // Objetivo
         addSectionTitle(panel, "Objetivo:");
         addRuleText(panel, "El objetivo principal es destruir todas las oleadas de alienígenas");
         addRuleText(panel, "que aparecen en la pantalla.");
         panel.add(Box.createVerticalStrut(10));
-
-        // Mecánica del juego
         addSectionTitle(panel, "Mecánica del juego:");
         addRuleText(panel, "• Control: El jugador controla una nave espacial que se mueve");
         addRuleText(panel, "  horizontalmente en la parte inferior de la pantalla.");
@@ -203,7 +212,6 @@ public class InfoPanel extends JFrame {
             star.setBounds(random.nextInt(FRAME_WIDTH), random.nextInt(FRAME_HEIGHT), 10, 10);
             panel.add(star);
         }
-
         panel.revalidate();
         panel.repaint();
     }

@@ -1,5 +1,7 @@
 package uptc.edu.co.client.View;
 
+import uptc.edu.co.client.controller.AudioController;
+import uptc.edu.co.client.controller.AudioManager; // Importa AudioManager
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -10,7 +12,6 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.net.URL;
 import java.util.Random;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -28,19 +29,17 @@ public class ControlsPanel extends JFrame {
     private static final int WASD_ARROWS_HEIGHT = SHIFT_HEIGHT + EXTRA_INCREASE;
     private static final int SPACE_WIDTH = 100;
     private static final int SPACE_HEIGHT = SHIFT_HEIGHT;
-    
+
     // Constantes para colores
     private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Color PANEL_COLOR = new Color(0, 100, 100);
     private static final Color BORDER_COLOR = new Color(0, 150, 150);
     private static final Color TEXT_COLOR = Color.WHITE;
     private static final Color STAR_COLOR = new Color(200, 200, 200);
-    
-    // Constantes para fuentes
+
     private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 40);
     private static final Font PLAYER_FONT = new Font("Arial", Font.BOLD, 24);
     private static final Font CONTROL_FONT = new Font("Arial", Font.PLAIN, 14);
-    
 
     private static final String LEFT_BUTTON_IMAGE = "/Images/boton-izquierda.png";
     private static final String RIGHT_BUTTON_IMAGE = "/Images/boton-derecha.png";
@@ -48,8 +47,15 @@ public class ControlsPanel extends JFrame {
     private static final String SPACE_IMAGE = "src/main/resources/Images/espace.png";
     private static final String ARROWS_IMAGE = "src/main/resources/Images/flechas.png";
     private static final String SHIFT_IMAGE = "src/main/resources/Images/shift derecho.png";
-    
+
+    private AudioController audioManager; // Instancia de AudioManager
+
     public ControlsPanel() {
+        // Inicializa AudioManager y carga la música
+        audioManager = new AudioController();
+        audioManager.loadSound("theme", "/resources/Galaga Theme.mp3"); // Carga el tema
+        audioManager.loopSound("theme"); // Comienza la reproducción en bucle
+
         initializeFrame();
         initComponents();
         setVisible(true);
@@ -69,7 +75,7 @@ public class ControlsPanel extends JFrame {
 
         JButton backButton = createNavigationButton(LEFT_BUTTON_IMAGE, 20, 20);
         JButton nextButton = createNavigationButton(RIGHT_BUTTON_IMAGE, 620, 20);
-        
+
         mainPanel.add(backButton);
         mainPanel.add(nextButton);
 
@@ -82,8 +88,14 @@ public class ControlsPanel extends JFrame {
 
         addStars(mainPanel);
 
-        backButton.addActionListener(e -> navigateTo(new InfoPanel()));
-        nextButton.addActionListener(e -> navigateTo(new EnemyPanel()));
+        backButton.addActionListener(e -> {
+            audioManager.stopSound("theme"); // Detiene la música al navegar
+            navigateTo(new InfoPanel());
+        });
+        nextButton.addActionListener(e -> {
+            audioManager.stopSound("theme"); // Detiene la música al navegar
+            navigateTo(new EnemyPanel());
+        });
     }
 
     private JPanel createMainPanel() {
@@ -98,10 +110,10 @@ public class ControlsPanel extends JFrame {
             System.err.println("No se pudo cargar la imagen: " + imagePath);
             return new JButton("?");
         }
-    
+
         ImageIcon icon = new ImageIcon(imageUrl);
         Image scaledImage = scaleImage(icon.getImage(), 48, 48);
-    
+
         JButton button = new JButton(new ImageIcon(scaledImage));
         button.setBounds(x, y, 45, 45);
         button.setContentAreaFilled(false);
@@ -111,7 +123,7 @@ public class ControlsPanel extends JFrame {
         button.setVisible(true);
         return button;
     }
-    
+
     private Image scaleImage(Image image, int width, int height) {
         try {
             return image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -163,16 +175,16 @@ public class ControlsPanel extends JFrame {
         playerLabel.setForeground(TEXT_COLOR);
         playerLabel.setBounds(50, yOffset, 150, 30);
         panel.add(playerLabel);
-    
+
         // etiquetas de controles
         addControlLabel(panel, "MOVIMIENTO A LA IZQ.", 50, yOffset + 40);
         addControlLabel(panel, "MOVIMIENTO A LA DER.", 350, yOffset + 40);
         addControlLabel(panel, "DISPARAR", 350, yOffset + 80);
-        
-        int verticalOffset = 25; 
-        
+
+        int verticalOffset = 25;
+
         addControlImage(panel, movementImagePath, WASD_ARROWS_WIDTH, WASD_ARROWS_HEIGHT, 210, yOffset - 23 + verticalOffset);
-        
+
         int actionImageWidth = playerName.equals("1 Player") ? SPACE_WIDTH : SHIFT_WIDTH;
         int actionImageHeight = playerName.equals("1 Player") ? SPACE_HEIGHT : SHIFT_HEIGHT;
         addControlImage(panel, actionImagePath, actionImageWidth, actionImageHeight, 212, yOffset + 20 + verticalOffset + 14);
