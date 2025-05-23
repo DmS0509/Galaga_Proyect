@@ -1,8 +1,24 @@
 package co.edu.uptc.view;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.io.InputStream;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import co.edu.uptc.controller.AudioController;
 
 public class MainMenu extends JFrame {
 
@@ -10,6 +26,8 @@ public class MainMenu extends JFrame {
     private JButton infoButton;
     private JLabel logoLabel;
     private Font customFont;
+    private static AudioController audioManager;
+    private static boolean audioInitialized = false;
 
     public MainMenu() {
         setTitle("Galaga");
@@ -17,6 +35,21 @@ public class MainMenu extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        
+        if (audioManager == null) {
+            audioManager = new AudioController();
+        }
+        
+        if (!audioInitialized) {
+            audioManager.loadSound("carga", "/music/sound-carga.wav");
+            audioManager.setVolume("carga", 0.3f);
+            audioManager.loopSound("carga");
+            audioInitialized = true;
+        } else {
+            if (!audioManager.isPlaying("carga")) {
+                audioManager.resumeSound("carga");
+            }
+        }
 
         loadCustomFont();
         initComponents();
@@ -63,6 +96,11 @@ public class MainMenu extends JFrame {
         playButton = createStyledButton("Jugar");
         playButton.setBounds(190, 220, 120, 40);
         backgroundPanel.add(playButton);
+        playButton.addActionListener(e -> {
+            audioManager.pauseSound("carga");
+            dispose(); 
+            new GalagaMenuView(); 
+        });
 
         infoButton = createStyledButton("Información");
         infoButton.setBounds(190, 280, 120, 40);
