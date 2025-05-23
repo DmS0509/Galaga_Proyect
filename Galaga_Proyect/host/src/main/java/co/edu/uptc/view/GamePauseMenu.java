@@ -17,21 +17,25 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 public class GamePauseMenu extends JFrame{
-   // Constantes para colores
     private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Color PANEL_COLOR = new Color(0, 128, 128);
     private static final Color BORDER_COLOR = new Color(0, 180, 180);
     private static final Color TEXT_COLOR = Color.WHITE;
 
-    // Constantes para fuentes
     private static final Font MENU_OPTION_FONT = new Font("Arial", Font.BOLD, 20);
 
-    // Constantes para el panel de menú
     private static final int MENU_PANEL_WIDTH = 280;
     private static final int MENU_PANEL_HEIGHT = 180;
     private static final int MENU_PANEL_CORNER_RADIUS = 30;
 
+    private JFrame parentGameFrame;
+
     public GamePauseMenu() {
+        this(null);
+    }
+
+    public GamePauseMenu(JFrame parentGameFrame) {
+        this.parentGameFrame = parentGameFrame;
         initializeFrame();
         initComponents();
         setVisible(true);
@@ -39,10 +43,11 @@ public class GamePauseMenu extends JFrame{
 
     private void initializeFrame() {
         setTitle("Pausa");
-        setSize(700, 500);
+        setSize(800, 600); 
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setResizable(false);
+        setAlwaysOnTop(true); 
     }
 
     private void initComponents() {
@@ -62,7 +67,6 @@ public class GamePauseMenu extends JFrame{
         mainPanel.add(menuPanel);
 
         addMenuOptions(menuPanel);
-
     }
 
     private JPanel createMenuPanel() {
@@ -109,6 +113,9 @@ public class GamePauseMenu extends JFrame{
 
             if (options[i].equals("Volver al menu")) {
                 optionButton.addActionListener(e -> {
+                    if (parentGameFrame != null) {
+                        parentGameFrame.dispose();
+                    }
                     dispose();
                     SwingUtilities.invokeLater(MainMenu::new);
                 });
@@ -140,23 +147,30 @@ public class GamePauseMenu extends JFrame{
             }
         });
 
-        // funcionalidad básica para los botones
         if (text.equals("Continuar")) {
             button.addActionListener(e -> {
+                if (parentGameFrame != null) {
+                    parentGameFrame.setVisible(true);
+                    parentGameFrame.toFront();
+                    parentGameFrame.requestFocus();
+                }
                 dispose();
             });
         } else if (text.equals("Reiniciar")) {
             button.addActionListener(e -> {
                 JOptionPane.showMessageDialog(this, "Reiniciando juego...");
-                //lógica para reiniciar el juego
+                
+                if (parentGameFrame != null) {
+                    parentGameFrame.dispose();
+                }
+                
+                SwingUtilities.invokeLater(() -> {
+                });
+                
                 dispose();
             });
         }
 
         return button;
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new GamePauseMenu());
     }
 }
