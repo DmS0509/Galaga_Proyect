@@ -31,7 +31,7 @@ public class EnemyPanel extends JFrame {
     private ImageIcon beeImage;
     private ImageIcon bossImage;
 
-    private static final String LEFT_BUTTON_IMAGE = "Galaga-Interfaz-master\\src\\main\\resources\\Images\\boton-izquierda.png";
+    private static final String LEFT_BUTTON_IMAGE = "/Images/boton-izquierda.png";
 
     public EnemyPanel() {
         setTitle("Enemigos");
@@ -47,7 +47,6 @@ public class EnemyPanel extends JFrame {
     public void initComponents() {
         getContentPane().setLayout(null); 
 
-        // Crear y agregar el fondo
         JLabel backgroundLabel = new JLabel(
             resizeIcon(new ImageIcon(getClass().getResource("/Images/fondo.jpg")), getWidth(), getHeight())
         );
@@ -55,8 +54,7 @@ public class EnemyPanel extends JFrame {
         backgroundLabel.setBounds(0, 0, getWidth(), getHeight());
         getContentPane().add(backgroundLabel);
 
-        // Crear el botón de retroceso
-        backButton = new JButton(new ImageIcon(LEFT_BUTTON_IMAGE));
+        backButton = new JButton(new ImageIcon(getClass().getResource(LEFT_BUTTON_IMAGE)));
         backButton.setBounds(10, 10, 50, 50);
         backButton.setContentAreaFilled(false);
         backButton.setBorderPainted(false); 
@@ -209,9 +207,5 @@ public class EnemyPanel extends JFrame {
         descriptionArea.setBounds(x + 60, y + 20, 400, 60);
         descriptionArea.setFont(new Font("Arial", Font.PLAIN, 14));
         panel.add(descriptionArea);
-    }
-
-    public static void main(String[] args) {
-        new EnemyPanel();
     }
 }

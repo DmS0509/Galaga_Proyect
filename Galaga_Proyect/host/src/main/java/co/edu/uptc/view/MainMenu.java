@@ -18,12 +18,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import co.edu.uptc.controller.AudioController;
+
 public class MainMenu extends JFrame {
 
     private JButton playButton;
     private JButton infoButton;
     private JLabel logoLabel;
     private Font customFont;
+    private static AudioController audioManager;
+    private static boolean audioInitialized = false;
 
     public MainMenu() {
         setTitle("Galaga");
@@ -31,6 +35,21 @@ public class MainMenu extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+        
+        if (audioManager == null) {
+            audioManager = new AudioController();
+        }
+        
+        if (!audioInitialized) {
+            audioManager.loadSound("carga", "/music/sound-carga.wav");
+            audioManager.setVolume("carga", 0.3f);
+            audioManager.loopSound("carga");
+            audioInitialized = true;
+        } else {
+            if (!audioManager.isPlaying("carga")) {
+                audioManager.resumeSound("carga");
+            }
+        }
 
         loadCustomFont();
         initComponents();
@@ -78,6 +97,7 @@ public class MainMenu extends JFrame {
         playButton.setBounds(190, 220, 120, 40);
         backgroundPanel.add(playButton);
         playButton.addActionListener(e -> {
+            audioManager.pauseSound("carga");
             dispose(); 
             new GalagaMenuView(); 
         });

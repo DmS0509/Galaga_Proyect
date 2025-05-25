@@ -13,10 +13,9 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class AudioController {
-
     private Map<String, Clip> clips = new HashMap<>();
-    private FloatControl gainControl;
-    private float volume = 1.0f;
+    private Map<String, FloatControl> gainControls = new HashMap<>();
+    private float volume = 1.0f; 
 
     public void loadSound(String soundName, String path) {
         try {
@@ -26,9 +25,10 @@ public class AudioController {
                 Clip clip = AudioSystem.getClip();
                 clip.open(audioIn);
                 clips.put(soundName, clip);
-                if (gainControl == null && clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-                    gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-                    setVolume(volume);
+                
+                if (clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                    FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+                    gainControls.put(soundName, gainControl);
                 }
             } else {
                 System.err.println("No se pudo cargar el sonido: " + path);
@@ -66,20 +66,89 @@ public class AudioController {
             Clip clip = clips.get(soundName);
             if (clip != null && clip.isRunning()) {
                 clip.stop();
-                clip.setFramePosition(0);
+                clip.setFramePosition(0); 
             }
+        }
+    }
+
+    public void setVolume(String soundName, float volume) {
+        volume = Math.max(0.0f, Math.min(1.0f, volume)); 
+        
+        if (gainControls.containsKey(soundName)) {
+            FloatControl gainControl = gainControls.get(soundName);
+            if (gainControl != null) {
+                if (volume == 0.0f) {
+                    gainControl.setValue(gainControl.getMinimum());
+                } else {
+                    float dB = 20f * (float) Math.log10(volume);
+                    dB = Math.max(gainControl.getMinimum(), Math.min(gainControl.getMaximum(), dB));
+                    gainControl.setValue(dB);
+                }
+            }
+        } else {
+            System.err.println("Control de volumen no disponible para: " + soundName);
         }
     }
 
     public void setVolume(float volume) {
         this.volume = Math.max(0.0f, Math.min(1.0f, volume));
-        if (gainControl != null) {
-            float dB = 20f * (float) Math.log10(this.volume);
-            gainControl.setValue(dB);
+        
+        for (String soundName : gainControls.keySet()) {
+            setVolume(soundName, this.volume);
         }
     }
 
     public float getVolume() {
         return volume;
+    }
+
+    public float getVolume(String soundName) {
+        if (gainControls.containsKey(soundName)) {
+            FloatControl gainControl = gainControls.get(soundName);
+            if (gainControl != null) {
+                float dB = gainControl.getValue();
+                return (float) Math.pow(10.0, dB / 20.0);
+            }
+        }
+        return 0.0f;
+    }
+
+    public void pauseSound(String soundName) {
+        if (clips.containsKey(soundName)) {
+            Clip clip = clips.get(soundName);
+            if (clip != null && clip.isRunning()) {
+                clip.stop();
+            }
+        }
+    }
+
+    public void resumeSound(String soundName) {
+        if (clips.containsKey(soundName)) {
+            Clip clip = clips.get(soundName);
+            if (clip != null && !clip.isRunning()) {
+                clip.start();
+            }
+        }
+    }
+
+    public boolean isPlaying(String soundName) {
+        if (clips.containsKey(soundName)) {
+            Clip clip = clips.get(soundName);
+            return clip != null && clip.isRunning();
+        }
+        return false;
+    }
+
+    public void dispose() {
+        for (Clip clip : clips.values()) {
+            if (clip != null) {
+                if (clip.isRunning()) {
+                    clip.stop();
+                }
+                clip.close();
+            }
+        }
+        clips.clear();
+        gainControls.clear();
     }
 }

@@ -54,18 +54,18 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
             int logoWidth = galagaLogo.getWidth(this);
             int logoHeight = galagaLogo.getHeight(this);
 
-            int scaledWidth = 240; // Ancho deseado
+            int scaledWidth = 240;
             int scaledHeight = (logoHeight * scaledWidth) / logoWidth;
 
             int xCenter = (getWidth() - scaledWidth) / 2;
-            int yPosition = 35; // Posición vertical fija
+            int yPosition = 35;
 
             g.drawImage(galagaLogo, xCenter, yPosition, scaledWidth, scaledHeight, this);
         }
 
         g.drawString((selectedOption == 0 ? "▶ " : "  ") + "1 PLAYER", 170, 180);
         g.drawString((selectedOption == 1 ? "▶ " : "  ") + "2 PLAYERS", 170, 210);
-        g.drawString((selectedOption == 2 ? "▶ " : "  ") + "VOLVER", 170, 240); // Nueva opción
+        g.drawString((selectedOption == 2 ? "▶ " : "  ") + "VOLVER", 170, 240);
 
     }
 
@@ -73,22 +73,21 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
-                selectedOption = (selectedOption - 1 + 3) % 3; // Navegar hacia arriba (circular entre 0, 1, 2)
+                selectedOption = (selectedOption - 1 + 3) % 3;
                 break;
             case KeyEvent.VK_DOWN:
-                selectedOption = (selectedOption + 1) % 3; // Navegar hacia abajo (circular entre 0, 1, 2)
+                selectedOption = (selectedOption + 1) % 3;
                 break;
             case KeyEvent.VK_ENTER:
                 if (selectedOption == 0) {
-                    // Abrir GamePauseMenu al seleccionar "1 PLAYER"
-                    new GamePauseMenu();
+                    SwingUtilities.getWindowAncestor(this).dispose();
+                    new InGamePanel(); 
                 } else if (selectedOption == 1) {
-                    // Abrir GamePauseMenu al seleccionar "2 PLAYERS"
-                    new GamePauseMenu();
+                    SwingUtilities.getWindowAncestor(this).dispose();
+                    new InGamePanel(); 
                 } else if (selectedOption == 2) {
-                    // Volver al menú principal
-                    SwingUtilities.getWindowAncestor(this).dispose(); // Cierra la ventana actual
-                    new MainMenu(); // Abre la ventana principal
+                    SwingUtilities.getWindowAncestor(this).dispose();
+                    new MainMenu();
                 }   break;
             default:
                 break;
@@ -104,7 +103,4 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
     public void keyTyped(KeyEvent e) {
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new GalagaMenuView().setVisible(true));
-    }
 }
