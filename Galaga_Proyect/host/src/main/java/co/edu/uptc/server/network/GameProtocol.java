@@ -19,7 +19,11 @@ public class GameProtocol {
                     return ClientAction.START_GAME;
                 case "PAUSE":
                     return ClientAction.PAUSE_GAME;
-                default:
+                case "RESUME": 
+                return ClientAction.RESUME_GAME;
+                 case "RESTART": 
+                return ClientAction.RESTART_GAME;
+                    default:
                     return ClientAction.UNKNOWN;
             }
         }

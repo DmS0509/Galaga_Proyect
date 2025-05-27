@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import co.edu.uptc.server.models.enemy.Bee;
+import co.edu.uptc.server.models.enemy.Boss;
 import co.edu.uptc.server.models.enemy.Enemy;
+import co.edu.uptc.server.models.enemy.Spi;
 
 public class GameWorld {
 
@@ -98,19 +101,28 @@ public class GameWorld {
         for (Proyectile projectile : new ArrayList<>(projectiles)) {
             if (players.containsKey(projectile.getOwnerId())) {
                 for (Enemy enemy : new ArrayList<>(enemies)) {
-                    if (projectile.isActive() && enemy.checkCollision(projectile.getX(), projectile.getY())) {
-                        enemy.takeDamage(1);
-                        projectile.deactivate();
-                        removeProjectile(projectile);
-                        if (enemy.getHealth() <= 0) {
-                            if (getPlayer(projectile.getOwnerId()) != null) {
-                                getPlayer(projectile.getOwnerId()).addScore(enemy.getKillPoints());
-                            }
-                            removeEnemy(enemy);
-                        }
-                    }
+                           float enemyWidth = 30; // O la propiedad real del enemigo
+        float enemyHeight = 30; // O la propiedad real del enemigo
+        if (enemy instanceof Boss) {
+            enemyWidth = 60;
+            enemyHeight = 60;
+        } else if (enemy instanceof Bee || enemy instanceof Spi) {
+            enemyWidth = 30;
+            enemyHeight = 30;
+        }
+
+        if (projectile.isActive() && enemy.checkCollision(projectile.getX(), projectile.getY(), enemyWidth, enemyHeight)) {
+            enemy.takeDamage(1);
+            projectile.deactivate();
+            removeProjectile(projectile); // Esto probablemente se hará en el siguiente ciclo si el proyectil está inactivo.
+            if (enemy.getHealth() <= 0) {
+                if (getPlayer(projectile.getOwnerId()) != null) {
+                    getPlayer(projectile.getOwnerId()).addScore(enemy.getKillPoints());
                 }
-            } else {
+                removeEnemy(enemy);
+            }
+        }
+    } }else {
                 for (Player player : players.values()) {
                     if (projectile.isActive() && !projectile.getOwnerId().equals(player.getPlayerId()) &&
                         player.checkCollision(projectile.getX(), projectile.getY(), 32, 32)) {

@@ -29,31 +29,24 @@ public class ClientHadler implements Runnable{
 
     @Override
     public void run() {
-        try {
+       try {
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            playerId = in.readLine();
+            this.playerId = "Player_" + System.currentTimeMillis(); // Generate a unique ID
+            gameEngine.addClient(playerId, this); // Register client handler with the engine
+            gameWorld.addPlayer(playerId, new Player(playerId, 350, 500, 100)); // Add player to game world
+            out.println(playerId); // Send the generated playerId to the client
             System.out.println("Cliente conectado con ID: " + playerId);
-            Player newPlayer = new Player(playerId, 350, 500, 100); // Posición y velocidad iniciales
-            gameWorld.addPlayer(playerId, newPlayer);
+            
             String clientInput;
             while ((clientInput = in.readLine()) != null) {
                 processClientInput(clientInput);
             }
 
         } catch (IOException e) {
-            System.err.println("Error en la comunicación con el cliente " + playerId + ": " + e.getMessage());
-        } finally {
-            gameWorld.removePlayer(playerId);
-            try {
-                if (out != null) out.close();
-                if (in != null) in.close();
-                clientSocket.close();
-                System.out.println("Cliente " + playerId + " se ha desconectado.");
-            } catch (IOException e) {
-                System.err.println("Error al cerrar la conexión con el cliente " + playerId + ": " + e.getMessage());
-            }
+            System.err.println("Error de I/O para el cliente " + playerId + ": " + e.getMessage());
         }
+    
     }
 
     private void processClientInput(String input) {
@@ -67,7 +60,15 @@ public class ClientHadler implements Runnable{
             case SHOOT:
                 gameEngine.playerShoot(playerId);
                 break;
-         
+            case PAUSE_GAME:
+                gameEngine.pauseGame();
+                break;
+            case RESUME_GAME:
+                gameEngine.resumeGame();
+                break;
+            case RESTART_GAME:
+                gameEngine.restartGame();
+                break;
             case UNKNOWN:
                 System.out.println("Acción desconocida del cliente " + playerId + ": " + input);
                 break;

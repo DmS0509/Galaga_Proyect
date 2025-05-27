@@ -8,7 +8,7 @@ import co.edu.uptc.server.models.Proyectile;
 import co.edu.uptc.server.models.enemy.Enemy;
 
 public class GameState {
-        private Map<String, Player> players;
+    private Map<String, Player> players;
     private List<Enemy> enemies;
     private List<Proyectile> projectiles;
     private int currentWave;
