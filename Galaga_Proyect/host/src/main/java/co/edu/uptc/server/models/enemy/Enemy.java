@@ -31,10 +31,26 @@ public abstract class Enemy {
     public abstract void update();
     public abstract void render(Graphics2D g2d);
 
-    public boolean checkCollision(float targetX, float targetY) {
-        return x >= targetX && x < targetX + 30 && 
-               y >= targetY && y < targetY + 30; 
+    public boolean checkCollision(float targetX, float targetY, float targetWidth, float targetHeight) {
+    return x < targetX + targetWidth &&
+           x + getWidth() > targetX &&
+           y < targetY + targetHeight &&
+           y + getHeight() > targetY;
+}
+
+    public float getWidth() {
+    if (sprite != null) {
+        return sprite.getWidth();
     }
+    return 30; 
+}
+
+public float getHeight() {
+    if (sprite != null) {
+        return sprite.getHeight();
+    }
+    return 30;
+}
 
     public void takeDamage(int damage) {
         this.health -= damage;

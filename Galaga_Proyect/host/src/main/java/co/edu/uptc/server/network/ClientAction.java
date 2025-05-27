@@ -6,6 +6,8 @@ public enum ClientAction {
     SHOOT,
     START_GAME,
     PAUSE_GAME,
+    RESUME_GAME,
+    RESTART_GAME,
     UNKNOWN
 
 }

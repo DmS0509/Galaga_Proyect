@@ -2,7 +2,6 @@ package co.edu.uptc.host.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics; // Import added
 import java.awt.Graphics2D;
@@ -15,12 +14,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.InputStream;
 
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import co.edu.uptc.host.controller.AudioController;
+import co.edu.uptc.server.network.ClientAction;
 
 public class InGamePanel extends JFrame implements KeyListener {
 
@@ -28,201 +27,146 @@ public class InGamePanel extends JFrame implements KeyListener {
     private static final Color TEXT_COLOR = Color.WHITE;
     private static final Color HIGH_SCORE_COLOR = Color.RED;
     private static final Color LIVES_COLOR = Color.GREEN;
-
+    private GameScreen gameScreen;
     private static Font SCORE_FONT;
     private static Font INFO_FONT;
+    private GamePauseMenu pauseMenu;
+    private GameAreaPanel gameArea; // Declaración de GameAreaPanel
+    private InfoPanel infoPanel; // Declaración de InfoPanel (si lo usas para la puntuación, etc.)
 
-    private GameAreaPanel gameArea;
-    private InfoPanel infoPanel;
-    
-    private static AudioController audioManager;
-    private static boolean audioInitialized = false;
+    private int currentScore = 0;
+    private int highScore = 10000;
+    private int lives = 3;
+    private Image playerLifeSprite; // Para mostrar las vidas
 
-    public InGamePanel() {
+    public InGamePanel(GameScreen gameScreen) { // Recibe GameScreen como parámetro
+        System.out.println("InGamePanel: Constructor iniciado.");
+        this.gameScreen = gameScreen;
+
         loadCustomFonts();
+        loadSprites(); // Nuevo método para cargar sprites (ej. vida del jugador)
 
-        if (audioManager == null) {
-            audioManager = new AudioController();
-        }
-        
-        if (!audioInitialized) {
-            audioManager.loadSound("game", "/music/sound-game.wav");
-            audioManager.setVolume("game", 0.01f);
-            audioManager.loopSound("game");
-            audioInitialized = true;
+        setTitle("Galaga");
+        setSize(800, 600); // Tamaño inicial
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        setLocationRelativeTo(null); // Centrar la ventana
+        setLayout(new BorderLayout()); // Usa BorderLayout para organizar paneles
+
+        System.out.println("InGamePanel: Inicializando GameAreaPanel...");
+        gameArea = new GameAreaPanel();
+        gameArea.setLayout(new BorderLayout()); // GameAreaPanel también usa BorderLayout para GameScreen
+
+        if (this.gameScreen != null) {
+            gameArea.add(this.gameScreen, BorderLayout.CENTER); // GameScreen ocupa el centro de GameAreaPanel
+            System.out.println("InGamePanel: GameScreen añadido a GameAreaPanel.");
         } else {
-            if (!audioManager.isPlaying("game")) {
-                audioManager.resumeSound("game");
-            }
+            System.err.println("InGamePanel: GameScreen es nulo. No se puede añadir.");
         }
 
-        initializeFrame();
-        initComponents();
-        setVisible(true);
+        add(gameArea, BorderLayout.CENTER); // GameAreaPanel ocupa el centro de InGamePanel
+
+        setFocusable(true);
+        requestFocusInWindow(); // Solicita el foco inicial al JFrame
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON3) { // Clic derecho para pausa
+                    if (gameScreen.getGameClient() != null) {
+                        gameScreen.getGameClient().sendAction(ClientAction.PAUSE_GAME);
+                        System.out.println("InGamePanel: Enviando acción de PAUSE_GAME al servidor.");
+                    }
+
+                    // Abrir el menú de pausa
+                    if (pauseMenu == null) {
+                        pauseMenu = new GamePauseMenu(InGamePanel.this, gameScreen.getGameClient());
+                        System.out.println("InGamePanel: GamePauseMenu instanciado.");
+                    }
+                    pauseMenu.setVisible(true);
+                    System.out.println("InGamePanel: GamePauseMenu visible.");
+                    gameScreen.getGameClient().sendAction(co.edu.uptc.server.network.ClientAction.PAUSE_GAME);
+                }
+            }
+        });
+
+        System.out.println("InGamePanel: Constructor completado. Listo para ser visible.");
     }
 
     private void loadCustomFonts() {
         try {
             InputStream is = getClass().getResourceAsStream("/fonts/Jersey10-Regular.ttf");
-            if (is != null) {
-                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, is);
-                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-                ge.registerFont(baseFont);
-
-                SCORE_FONT = baseFont.deriveFont(Font.BOLD, 24f);
-                INFO_FONT = baseFont.deriveFont(Font.BOLD, 18f);
+            if (is == null) {
+                System.err.println("InGamePanel: No se encontró el recurso de la fuente: /fonts/PressStart2P-Regular.ttf. Usando fuentes por defecto.");
+                SCORE_FONT = new Font("Monospaced", Font.BOLD, 24); // Fuente de fallback
+                INFO_FONT = new Font("Monospaced", Font.PLAIN, 18); // Fuente de fallback
             } else {
-                System.err.println("No se encontró la fuente en /fonts/Jersey10-Regular.ttf. Usando fuentes por defecto.");
-                SCORE_FONT = new Font("Monospaced", Font.BOLD, 24);
-                INFO_FONT = new Font("Monospaced", Font.BOLD, 18);
+                SCORE_FONT = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(24f);
+                // Es buena práctica reiniciar el stream si se va a leer de nuevo para otra fuente o tamaño
+                is = getClass().getResourceAsStream("/fonts/PressStart2P-Regular.2ttf"); // Asegúrate de que esta ruta sea correcta o usa deriveFont
+                if (is != null) {
+                    INFO_FONT = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(18f);
+                } else {
+                    INFO_FONT = SCORE_FONT.deriveFont(18f);
+                }
+                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(SCORE_FONT);
+                ge.registerFont(INFO_FONT);
+                System.out.println("InGamePanel: Fuentes personalizadas cargadas correctamente.");
             }
         } catch (Exception e) {
-            System.err.println("Error cargando la fuente: " + e.getMessage());
-            SCORE_FONT = new Font("Monospaced", Font.BOLD, 24);
-            INFO_FONT = new Font("Monospaced", Font.BOLD, 18);
+            System.err.println("InGamePanel: Error al cargar las fuentes personalizadas: " + e.getMessage());
+            e.printStackTrace();
+            SCORE_FONT = new Font("Monospaced", Font.BOLD, 24); // Fuente de fallback
+            INFO_FONT = new Font("Monospaced", Font.PLAIN, 18); // Fuente de fallback
         }
     }
 
-    // Método público para acceder al InfoPanel y actualizar el score
-    public void updateScore(int newScore) {
-        //infoPanel.updateScore(newScore);
-    }
-
-    // Método público para obtener el score actual
-    public int getCurrentScore() {
-        return 0;
-        // return infoPanel.getCurrentScore();
-    }
-
-    private void initializeFrame() {
-        setTitle("Galaga");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
-        setLocationRelativeTo(null);
-        addKeyListener(this);
-        setFocusable(true);
-    }
-
-    private void initComponents() {
-        setLayout(new BorderLayout());
-
-        gameArea = new GameAreaPanel();
-        add(gameArea, BorderLayout.CENTER);
-
-        infoPanel = new InfoPanel();
-        add(infoPanel, BorderLayout.EAST);
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_P) {
-            this.setVisible(false);
-            new GamePauseMenu(this);
-        }
-
-        // Método para actualizar el score desde el back
-        //public void updateScore(int newScore) {
-            // this.currentScore = newScore;
-            //repaint(); // Redibuja el panel para mostrar el nuevo score
-        //}
-
-        // Getter para obtener el score actual
-        //public int getCurrentScore() {
-            //return currentScore;
-        //}
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {}
-
-    @Override
-    public void keyTyped(KeyEvent e) {}
-
-    // Panel del área de juego
-    class GameAreaPanel extends JPanel {
-        private Image backgroundImage;
-        private Image menuIcon;
-
-        public GameAreaPanel() {
-            setPreferredSize(new Dimension(600, 600));
-            setBackground(BACKGROUND_COLOR);
-            loadImages();
-
-            addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getX() <= 50 && e.getY() <= 40) {
-                        InGamePanel.this.setVisible(false);
-                        new GamePauseMenu(InGamePanel.this);
-                    }
-                }
-            });
-        }
-
-        private void loadImages() {
-            try {
-                backgroundImage = new ImageIcon(getClass().getResource("/Images/fondo.jpg")).getImage();
-                menuIcon = new ImageIcon(getClass().getResource("/Images/menu.png")).getImage();
-            } catch (Exception e) {
-                System.err.println("Error cargando imágenes: " + e.getMessage());
-            }
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g.create();
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            if (backgroundImage != null) {
-                g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+    private void loadSprites() {
+        try {
+            playerLifeSprite = new ImageIcon(getClass().getResource("/Images/naveGalaga.png")).getImage();
+            if (playerLifeSprite == null) {
+                System.err.println("InGamePanel: No se pudo cargar el sprite de vida del jugador. Verifique la ruta /Images/naveGalaga.png");
             } else {
-                g2d.setColor(BACKGROUND_COLOR);
-                g2d.fillRect(0, 0, getWidth(), getHeight());
-                drawStars(g2d);
+                System.out.println("InGamePanel: Sprite de vida del jugador cargado correctamente.");
             }
-
-            if (menuIcon != null) {
-                g2d.drawImage(menuIcon, 10, 10, 40, 30, this);
-            }
-
-            g2d.dispose();
+        } catch (Exception e) {
+            System.err.println("InGamePanel: Error al cargar el sprite de vida del jugador: " + e.getMessage());
+            e.printStackTrace();
         }
-
-        private void drawStars(Graphics2D g2d) {
-            g2d.setColor(Color.WHITE);
-            for (int i = 0; i < 50; i++) {
-                int x = (int) (Math.random() * getWidth());
-                int y = (int) (Math.random() * getHeight());
-                int size = (int) (Math.random() * 3) + 1;
-                g2d.fillOval(x, y, size, size);
-            }
-        }
-
-
     }
 
-    // Panel de información lateral
-    class InfoPanel extends JPanel {
-        private Image shipImage;
-        private int currentScore = 0;
+    public void updateScore(int score) {
+        this.currentScore = score;
+    }
 
-        public InfoPanel() {
-            setPreferredSize(new Dimension(200, 600));
-            setBackground(BACKGROUND_COLOR);
-            setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, LIVES_COLOR));
-            loadImages();
+    public void updateLives(int lives) {
+        this.lives = lives;
+    }
+
+    public class GameAreaPanel extends JPanel {
+        public GameAreaPanel() {
+            setBackground(BACKGROUND_COLOR); // Fondo negro para el área de juego
+            setLayout(new BorderLayout()); // Para que GameScreen se expanda
+            setFocusable(true); // Necesario para la captura de eventos de teclado (si InGamePanel no lo maneja directamente)
+            System.out.println("GameAreaPanel: Inicializado.");
+            addStars(this); // Añade estrellas al GameAreaPanel
         }
 
-        private void loadImages() {
-            try {
-                shipImage = new ImageIcon(getClass().getResource("/Images/nave2.png")).getImage();
-            } catch (Exception e) {
-                System.err.println("Error cargando imagen de nave: " + e.getMessage());
-            }
-        }
-
+        private void addStars(JPanel panel) {
+    java.util.Random random = new java.util.Random();
+    int panelWidth = Math.max(1, panel.getWidth());  // Asegura mínimo 1
+    int panelHeight = Math.max(1, panel.getHeight()); // Asegura mínimo 1
+    
+    for (int i = 0; i < 100; i++) {
+        JLabel star = new JLabel("•"); // Usamos un punto más visible
+        star.setForeground(Color.WHITE);
+        star.setFont(new Font("Arial", Font.PLAIN, 8)); // Tamaño más controlado
+        star.setBounds(random.nextInt(panelWidth), random.nextInt(panelHeight), 5, 5);
+        panel.add(star);
+    }
+    System.out.println("GameAreaPanel: Añadidas " + 100 + " estrellas.");
+}
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -231,8 +175,8 @@ public class InGamePanel extends JFrame implements KeyListener {
             g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
             drawScoreInfo(g2d);
-
-            drawShip(g2d);
+            drawLives(g2d);
+            // No dibujes el jugador ni los enemigos aquí, eso lo hace GameScreen.
 
             g2d.dispose();
         }
@@ -240,7 +184,6 @@ public class InGamePanel extends JFrame implements KeyListener {
         private void drawScoreInfo(Graphics2D g2d) {
             int yPos = 50;
             int leftMargin = 10;
-
 
             g2d.setColor(HIGH_SCORE_COLOR);
             g2d.setFont(SCORE_FONT);
@@ -256,26 +199,59 @@ public class InGamePanel extends JFrame implements KeyListener {
             g2d.setColor(TEXT_COLOR);
             g2d.setFont(INFO_FONT);
 
-            String currentScoreText = String.valueOf(currentScore);
+            String currentScoreText = String.valueOf(currentScore); // Usa la variable de instancia
             g2d.drawString(currentScoreText, leftMargin, yPos);
 
             yPos += 80;
             g2d.setColor(HIGH_SCORE_COLOR);
-            String livesText = "1 UP";
-            g2d.drawString(livesText, leftMargin, yPos);
+            String livesLabel = "1 UP";
+            g2d.drawString(livesLabel, leftMargin, yPos);
         }
 
-        private void drawShip(Graphics2D g2d) {
-            int shipY = getHeight() - 150;
-            int shipSize = 60;
-            int shipX = (getWidth() - shipSize) / 2;
+        private void drawLives(Graphics2D g2d) {
+            int xPos = 10;
+            int yPos = 250; // Posición para dibujar las vidas
+            int spriteSize = 24; // Tamaño del sprite de vida (ajusta según tu imagen)
+            int spacing = 5;
 
-            if (shipImage != null) {
-                g2d.drawImage(shipImage, shipX, shipY, shipSize, shipSize, this);
+            g2d.setColor(LIVES_COLOR);
+            g2d.setFont(INFO_FONT);
+            g2d.drawString("LIVES", xPos, yPos);
+            yPos += 30; // Mueve hacia abajo para los sprites
+
+            for (int i = 0; i < lives; i++) { // Usa la variable de instancia
+                if (playerLifeSprite != null) {
+                    g2d.drawImage(playerLifeSprite, xPos + (i * (spriteSize + spacing)), yPos, spriteSize, spriteSize, null);
+                } else {
+                    g2d.fillRect(xPos + (i * (spriteSize + spacing)), yPos, spriteSize, spriteSize); // Fallback
+                }
             }
         }
-
-
     }
 
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            if (pauseMenu == null) {
+                pauseMenu = new GamePauseMenu(this, gameScreen.getGameClient());
+            }
+            pauseMenu.setVisible(true);
+            System.out.println("InGamePanel: Escape presionado, mostrando GamePauseMenu.");
+            // Pausar el juego en el servidor
+            if (gameScreen.getGameClient() != null) {
+                gameScreen.getGameClient().sendAction(co.edu.uptc.server.network.ClientAction.PAUSE_GAME);
+            }
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        // Normalmente no se envían acciones de "release" a menos que necesites diferenciar
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        // No se usa comúnmente para juegos de acción
+    }
 }

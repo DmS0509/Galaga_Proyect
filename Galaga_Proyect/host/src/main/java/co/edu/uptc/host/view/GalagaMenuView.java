@@ -8,8 +8,12 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
+import co.edu.uptc.host.controller.GameClient;
+import co.edu.uptc.host.controller.InputHandler;
 
 public class GalagaMenuView extends JFrame{
 
@@ -79,12 +83,24 @@ class MenuPanel extends JPanel implements java.awt.event.KeyListener {
                 selectedOption = (selectedOption + 1) % 3;
                 break;
             case KeyEvent.VK_ENTER:
-                if (selectedOption == 0) {
-                    SwingUtilities.getWindowAncestor(this).dispose();
-                    new InGamePanel(); 
-                } else if (selectedOption == 1) {
-                    SwingUtilities.getWindowAncestor(this).dispose();
-                    new InGamePanel(); 
+                 if (selectedOption == 0 || selectedOption == 1) { // 1 PLAYER o 2 PLAYERS
+                SwingUtilities.getWindowAncestor(this).dispose();
+                String serverAddress = "localhost"; // O la IP de tu servidor
+                int serverPort = 5000;
+                GameScreen gameScreen = new GameScreen(null); // Se pasa null por ahora, se asignará más tarde
+
+                GameClient gameClient = new GameClient(serverAddress, serverPort, gameScreen);
+                gameScreen.setGameClient(gameClient); // Añade un setter en GameScreen
+
+                if (gameClient.connect()) {
+                    System.out.println("Cliente conectado con éxito.");
+                    InGamePanel inGamePanel = new InGamePanel(gameScreen); // Pasa gameScreen
+                    inGamePanel.addKeyListener(new InputHandler(gameClient)); // Añade el InputHandler aquí
+                    inGamePanel.setVisible(true);
+                    gameScreen.requestFocusInWindow(); // Asegura que GameScreen tenga el foco para las entradas
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo conectar al servidor. Asegúrate de que el servidor esté en ejecución.", "Error de Conexión", JOptionPane.ERROR_MESSAGE);
+                }
                 } else if (selectedOption == 2) {
                     SwingUtilities.getWindowAncestor(this).dispose();
                     new MainMenu();

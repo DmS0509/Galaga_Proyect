@@ -10,8 +10,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import co.edu.uptc.server.models.enemy.Enemy;
-
 public class EnemyRenderer {
 
      private Map<String, BufferedImage> enemySprites = new HashMap<>();
@@ -38,14 +36,14 @@ public class EnemyRenderer {
         }
     }
 
-    public void render(Graphics2D g2d, Enemy enemy) {
-        BufferedImage sprite = enemySprites.get(enemy.getSpritePath());
-        if (sprite != null) {
-            g2d.drawImage(sprite, (int) enemy.getX(), (int) enemy.getY(), null);
-        } else {
-            g2d.setColor(Color.RED);
-            g2d.fillRect((int) enemy.getX(), (int) enemy.getY(), 30, 30);
-            System.err.println("Sprite no encontrado para: " + enemy.getSpritePath());
-        }
+    public void render(Graphics2D g2d, co.edu.uptc.server.models.enemy.Enemy enemy) {
+    BufferedImage sprite = enemy.getSprite(); // Asumiendo que Enemy tiene un getSprite() público
+    if (sprite != null) {
+        g2d.drawImage(sprite, (int) enemy.getX(), (int) enemy.getY(), null);
+    } else {
+        g2d.setColor(Color.RED); // Color de fallback si no hay sprite
+        g2d.fillRect((int) enemy.getX(), (int) enemy.getY(), 30, 30); // Dibuja un rectángulo de fallback
+        System.err.println("Sprite nulo para el enemigo en X:" + enemy.getX() + ", Y:" + enemy.getY());
     }
+}
 }

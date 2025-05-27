@@ -16,12 +16,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import co.edu.uptc.host.controller.GameClient;
+import co.edu.uptc.server.network.ClientAction;
+
 public class GamePauseMenu extends JFrame{
     private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Color PANEL_COLOR = new Color(0, 128, 128);
     private static final Color BORDER_COLOR = new Color(0, 180, 180);
     private static final Color TEXT_COLOR = Color.WHITE;
-
+    private GameClient gameClient;
     private static final Font MENU_OPTION_FONT = new Font("Arial", Font.BOLD, 20);
 
     private static final int MENU_PANEL_WIDTH = 280;
@@ -30,8 +33,9 @@ public class GamePauseMenu extends JFrame{
 
     private JFrame parentGameFrame;
 
-    public GamePauseMenu() {
-        this(null);
+    public GamePauseMenu(JFrame parentGameFrame, GameClient gameClient) {
+        this.parentGameFrame = parentGameFrame;
+        this.gameClient = gameClient;
     }
 
     public GamePauseMenu(JFrame parentGameFrame) {
@@ -149,6 +153,9 @@ public class GamePauseMenu extends JFrame{
 
         if (text.equals("Continuar")) {
             button.addActionListener(e -> {
+                if (gameClient != null) {
+                    gameClient.sendAction(ClientAction.RESUME_GAME); // Envía acción de reanudar
+                }
                 if (parentGameFrame != null) {
                     parentGameFrame.setVisible(true);
                     parentGameFrame.toFront();
@@ -158,15 +165,13 @@ public class GamePauseMenu extends JFrame{
             });
         } else if (text.equals("Reiniciar")) {
             button.addActionListener(e -> {
+                if (gameClient != null) {
+                    gameClient.sendAction(ClientAction.RESTART_GAME); // Envía acción de reiniciar
+                }
                 JOptionPane.showMessageDialog(this, "Reiniciando juego...");
-                
                 if (parentGameFrame != null) {
                     parentGameFrame.dispose();
                 }
-                
-                SwingUtilities.invokeLater(() -> {
-                });
-                
                 dispose();
             });
         }
